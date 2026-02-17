@@ -17,7 +17,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
-        /* Estilos adicionales para que en iOS no se vea la barra de scroll */
         body { -webkit-tap-highlight-color: transparent; }
         #factura-template {
             width: 21.59cm;
@@ -27,9 +26,8 @@
             font-family: 'Arial', sans-serif;
             line-height: 1.2;
             color: black;
-            font-size: 13px; /* Tamaño base reducido */
+            font-size: 13px; 
         }
-        /* Ajustes de Tailwind para el PDF */
         #factura-template .text-2xl { font-size: 1.25rem !important; }
         #factura-template .text-lg { font-size: 0.95rem !important; }
         #factura-template .text-md { font-size: 0.85rem !important; }
@@ -143,13 +141,21 @@
     </div>
 
     <script>
-        // 1. Cargar datos guardados al inicio
+        console.log("Aplicación cargada: Versión sin caché");
+
+        // 1. Cargar datos guardados al inicio con protección de errores
         window.onload = function() {
-            if(localStorage.getItem('datosEmisor')) {
-                const datos = JSON.parse(localStorage.getItem('datosEmisor'));
-                document.getElementById('config-nombre').value = datos.nombre;
-                document.getElementById('config-cc').value = datos.cc;
-                document.getElementById('config-banco').value = datos.banco;
+            try {
+                if(localStorage.getItem('datosEmisor')) {
+                    const datos = JSON.parse(localStorage.getItem('datosEmisor'));
+                    if(datos) {
+                        document.getElementById('config-nombre').value = datos.nombre || "HECTOR RUIZ CARDENAS";
+                        document.getElementById('config-cc').value = datos.cc || "79.129.797";
+                        document.getElementById('config-banco').value = datos.banco || "Banco Caja Social No. 245 2133 7065";
+                    }
+                }
+            } catch (error) {
+                console.error("Error leyendo datos guardados:", error);
             }
         };
 
@@ -181,4 +187,103 @@
             if (filas.length > 1) {
                 boton.parentElement.remove();
             } else {
-                alert("Debes tener al menos un concepto en la cuenta
+                alert("Debes tener al menos un concepto en la cuenta.");
+            }
+        }
+
+        // 3. Convertir números a letras
+        function numeroALetras(num) {
+            const unidades = ['','UN', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
+            const decenas = ['DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISEIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE'];
+            const decenas2 = ['','','VEINTE', 'TREINTA', 'CUARENTA', 'CINCUENTA', 'SESENTA', 'SETENTA', 'OCHENTA', 'NOVENTA'];
+            const centenas = ['','CIENTO', 'DOSCIENTOS', 'TRESCIENTOS', 'CUATROCIENTOS', 'QUINIENTOS', 'SEISCIENTOS', 'SETECIENTOS', 'OCHOCIENTOS', 'NOVECIENTOS'];
+
+            function convertirSeccion(n) {
+                let output = '';
+                if (n === 100) return 'CIEN ';
+                if (n > 100) output += centenas[Math.floor(n/100)] + ' ';
+                let resto = n % 100;
+                if (resto > 0) {
+                    if (resto < 10) output += unidades[resto] + ' ';
+                    else if (resto < 20) output += decenas[resto-10] + ' ';
+                    else {
+                        output += decenas2[Math.floor(resto/10)] + (resto % 10 > 0 ? ' Y ' + unidades[resto % 10] : '') + ' ';
+                    }
+                }
+                return output;
+            }
+
+            if (num === 0) return 'CERO PESOS';
+            let millones = Math.floor(num / 1000000);
+            let miles = Math.floor((num % 1000000) / 1000);
+            let cienes = num % 1000;
+
+            let resultado = '';
+            if (millones > 0) resultado += (millones === 1 ? 'UN MILLÓN ' : convertirSeccion(millones) + 'MILLONES ');
+            if (miles > 0) resultado += (miles === 1 ? 'MIL ' : convertirSeccion(miles) + 'MIL ');
+            if (cienes > 0) resultado += convertirSeccion(cienes);
+
+            return resultado.trim() + ' PESOS M/CTE';
+        }
+
+        // 4. Generar el PDF final
+        function generarPDF() {
+            const empresa = document.getElementById('input-empresa').value || '';
+            const nit = document.getElementById('input-nit').value || '';
+            const descs = document.querySelectorAll('.desc-concepto');
+            const vals = document.querySelectorAll('.val-concepto');
+            
+            const nombreEmisor = document.getElementById('config-nombre').value;
+            const ccEmisor = document.getElementById('config-cc').value;
+            const bancoEmisor = document.getElementById('config-banco').value;
+            
+            document.getElementById('pdf-nombre-emisor').innerText = nombreEmisor.toUpperCase();
+            document.getElementById('pdf-cc-emisor').innerText = "CC. " + ccEmisor;
+            document.getElementById('pdf-banco-emisor').innerHTML = `Favor consignar el valor en la cuenta de ahorros **${bancoEmisor}** a nombre de ${nombreEmisor}.`;
+            document.getElementById('pdf-firma-nombre').innerText = nombreEmisor;
+            document.getElementById('pdf-firma-cc').innerText = "C.C. " + ccEmisor;
+            
+            const hoy = new Date();
+            const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('fecha-actual').innerText = "Bogotá, " + hoy.toLocaleDateString('es-ES', opciones);
+
+            document.getElementById('text-empresa').innerText = empresa.toUpperCase();
+            document.getElementById('text-nit').innerText = "NIT. " + nit;
+
+            let total = 0;
+            let filas = '';
+            descs.forEach((d, i) => {
+                const v = parseFloat(vals[i].value) || 0;
+                total += v;
+                filas += `<tr>
+                    <td class="border border-black p-3">${d.value}</td>
+                    <td class="border border-black p-3 text-right">$${v.toLocaleString('es-CO')}</td>
+                </tr>`;
+            });
+
+            filas += `<tr class="font-bold bg-gray-50">
+                <td class="border border-black p-3 text-right">TOTAL CUENTA DE COBRO</td>
+                <td class="border border-black p-3 text-right">$${total.toLocaleString('es-CO')}</td>
+            </tr>`;
+
+            document.getElementById('tabla-body').innerHTML = filas;
+            document.getElementById('text-total-numero').innerText = "$" + total.toLocaleString('es-CO');
+            document.getElementById('text-total-letras').innerText = numeroALetras(total);
+
+            const element = document.getElementById('factura-template');
+            const opt = {
+                margin: 0,
+                filename: `Cuenta_Cobro_${empresa.replace(/\s+/g, '_')}.pdf`,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 3, useCORS: true },
+                jsPDF: { unit: 'cm', format: 'letter', orientation: 'portrait' }
+            };
+
+            document.getElementById('pdf-container').classList.remove('hidden');
+            html2pdf().set(opt).from(element).save().then(() => {
+                document.getElementById('pdf-container').classList.add('hidden');
+            });
+        }
+    </script>
+</body>
+</html>
