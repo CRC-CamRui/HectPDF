@@ -220,28 +220,41 @@
         }
 
         function generarPDF() {
-            // ... (mantén tu lógica de conceptos y empresa)
+            // 1. CAPTURAR LOS DATOS DEL FORMULARIO (Esto era lo que faltaba)
+            const empresa = document.getElementById('input-empresa').value || '';
+            const nit = document.getElementById('input-nit').value || '';
+            const descs = document.querySelectorAll('.desc-concepto');
+            const vals = document.querySelectorAll('.val-concepto');
             
-            // Obtener datos del emisor desde la configuración
+            // 2. Obtener datos del emisor desde la configuración
             const nombreEmisor = document.getElementById('config-nombre').value;
             const ccEmisor = document.getElementById('config-cc').value;
             const bancoEmisor = document.getElementById('config-banco').value;
             
-            // Inyectar en el template del PDF
-            // Buscamos los contenedores en el HTML y los actualizamos
-            document.querySelector('#factura-template .text-lg:nth-of-type(2)').innerText = nombreEmisor.toUpperCase();
-            document.querySelector('#factura-template .mb-10.text-lg').innerText = "CC. " + ccEmisor;
-            document.querySelector('#factura-template .bg-gray-50').innerHTML = `Favor consignar el valor en la cuenta de ahorros **${bancoEmisor}** a nombre de ${nombreEmisor}.`;
-            // Firma
-            document.querySelector('.mt-24 .font-bold').innerText = nombreEmisor;
-            document.querySelector('.mt-24 div:nth-child(2)').innerText = "C.C. " + ccEmisor;
+            // 3. Inyectar en el template del PDF
+            // Actualizar nombre y CC en la parte de "DEBE A:"
+            const divsTexto = document.querySelectorAll('#factura-template .text-lg');
+            if(divsTexto.length >= 3) {
+                divsTexto[1].innerText = nombreEmisor.toUpperCase();
+                divsTexto[2].innerText = "CC. " + ccEmisor;
+            }
+            
+            // Actualizar cuenta bancaria
+            const textoBanco = document.querySelector('#factura-template .bg-gray-50');
+            if(textoBanco) textoBanco.innerHTML = `Favor consignar el valor en la cuenta de ahorros **${bancoEmisor}** a nombre de ${nombreEmisor}.`;
+            
+            // Actualizar Firma al final del documento
+            const firmaNombre = document.querySelector('.mt-24 .font-bold');
+            const firmaCC = document.querySelector('.mt-24 div:nth-child(2)');
+            if(firmaNombre) firmaNombre.innerText = nombreEmisor;
+            if(firmaCC) firmaCC.innerText = "C.C. " + ccEmisor;
             
             // Fecha Actual
             const hoy = new Date();
             const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('fecha-actual').innerText = "Bogotá, " + hoy.toLocaleDateString('es-ES', opciones);
 
-            // 2. Llenar Template
+            // 4. Llenar Template con los datos del cliente y conceptos
             document.getElementById('text-empresa').innerText = empresa.toUpperCase();
             document.getElementById('text-nit').innerText = "NIT. " + nit;
 
@@ -265,7 +278,7 @@
             document.getElementById('text-total-numero').innerText = "$" + total.toLocaleString('es-CO');
             document.getElementById('text-total-letras').innerText = numeroALetras(total);
 
-            // 3. Exportar PDF
+            // 5. Exportar PDF
             const element = document.getElementById('factura-template');
             const opt = {
                 margin: 0,
@@ -284,6 +297,7 @@
     </script>
 </body>
 </html>
+
 
 
 
