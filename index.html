@@ -50,7 +50,7 @@
             <hr class="my-4">
             
             <div class="space-y-4">
-    <label class="block text-sm font-medium text-gray-700 mb-1">Conceptos de Cobro</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Conceptos de Cobro</label>
   
             <div id="filas-conceptos" class="space-y-3">
                 <div class="flex gap-2 items-start concepto-item">
@@ -59,11 +59,37 @@
                     <button onclick="eliminarFila(this)" class="p-3 text-red-500 hover:bg-red-50 rounded-lg">✕</button>
                 </div>
             </div>
-    
-    <button onclick="agregarFila()" class="w-full py-2 border-2 border-dashed border-blue-400 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors">
-        + Agregar otro concepto
-    </button>
-</div>
+                <button onclick="agregarFila()" class="w-full py-2 border-2 border-dashed border-blue-400 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors">
+                    + Agregar otro concepto
+                </button>
+            </div>
+
+
+            <div class="mt-6 border-t pt-4">
+                <details class="group">
+                    <summary class="flex justify-between items-center font-medium cursor-pointer list-none text-gray-500 text-sm">
+                        <span>⚙️ Configuración de mis datos (Héctor)</span>
+                        <span class="transition group-open:rotate-180">
+                            <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="space-y-3 mt-4 text-gray-700 animate-fadeIn">
+                        <div>
+                            <label class="block text-xs font-semibold">Nombre Completo</label>
+                            <input type="text" id="config-nombre" value="HECTOR RUIZ CARDENAS" class="w-full border p-2 rounded text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold">Cédula</label>
+                            <input type="text" id="config-cc" value="79.129.797" class="w-full border p-2 rounded text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold">Datos Bancarios</label>
+                            <textarea id="config-banco" class="w-full border p-2 rounded text-sm" rows="2">Banco Caja Social No. 245 2133 7065</textarea>
+                        </div>
+                        <button onclick="guardarAjustes()" class="text-xs bg-gray-800 text-white px-3 py-1 rounded">Guardar Cambios</button>
+                    </div>
+                </details>
+            </div>
             
             <button onclick="generarPDF()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all transform active:scale-95">
                 📄 Generar Cuenta de Cobro
@@ -112,6 +138,25 @@
     </div>
 
     <script>
+        // Al cargar la página, verificamos si hay datos guardados
+        window.onload = function() {
+            if(localStorage.getItem('datosEmisor')) {
+                const datos = JSON.parse(localStorage.getItem('datosEmisor'));
+                document.getElementById('config-nombre').value = datos.nombre;
+                document.getElementById('config-cc').value = datos.cc;
+                document.getElementById('config-banco').value = datos.banco;
+            }
+        };
+        function guardarAjustes() {
+            const datos = {
+                nombre: document.getElementById('config-nombre').value,
+                cc: document.getElementById('config-cc').value,
+                banco: document.getElementById('config-banco').value
+            };
+            localStorage.setItem('datosEmisor', JSON.stringify(datos));
+            alert("Datos actualizados correctamente.");
+        }
+
         // --- FUNCIÓN DE NÚMERO A LETRAS (Específica para Pesos Colombianos) ---
         function numeroALetras(num) {
             const unidades = ['','UN', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
@@ -170,11 +215,21 @@
         }
 
         function generarPDF() {
-            // 1. Obtener Datos
-            const empresa = document.getElementById('input-empresa').value || 'EMPRESA';
-            const nit = document.getElementById('input-nit').value || '000';
-            const descs = document.querySelectorAll('.desc-concepto');
-            const vals = document.querySelectorAll('.val-concepto');
+            // ... (mantén tu lógica de conceptos y empresa)
+            
+            // Obtener datos del emisor desde la configuración
+            const nombreEmisor = document.getElementById('config-nombre').value;
+            const ccEmisor = document.getElementById('config-cc').value;
+            const bancoEmisor = document.getElementById('config-banco').value;
+            
+            // Inyectar en el template del PDF
+            // Buscamos los contenedores en el HTML y los actualizamos
+            document.querySelector('#factura-template .text-lg:nth-of-type(2)').innerText = nombreEmisor.toUpperCase();
+            document.querySelector('#factura-template .mb-10.text-lg').innerText = "CC. " + ccEmisor;
+            document.querySelector('#factura-template .bg-gray-50').innerHTML = `Favor consignar el valor en la cuenta de ahorros **${bancoEmisor}** a nombre de ${nombreEmisor}.`;
+            // Firma
+            document.querySelector('.mt-24 .font-bold').innerText = nombreEmisor;
+            document.querySelector('.mt-24 div:nth-child(2)').innerText = "C.C. " + ccEmisor;
             
             // Fecha Actual
             const hoy = new Date();
@@ -224,4 +279,5 @@
     </script>
 </body>
 </html>
+
 
