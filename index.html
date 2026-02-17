@@ -19,15 +19,20 @@
     <style>
         /* Estilos adicionales para que en iOS no se vea la barra de scroll */
         body { -webkit-tap-highlight-color: transparent; }
-        #factura-template { 
-            width: 21.59cm; 
-            min-height: 27.94cm; 
-            padding: 2.5cm; 
-            background: white; 
-            font-family: 'Arial', sans-serif; 
-            line-height: 1;
+        #factura-template {
+            width: 21.59cm;
+            min-height: 27.94cm;
+            padding: 2.5cm;
+            background: white;
+            font-family: 'Arial', sans-serif;
+            line-height: 1.2; /* Un poco más de aire para compensar la letra pequeña */
             color: black;
+            font-size: 13px; /* Tamaño base más pequeño (antes era ~16px) */
         }
+        /* Ajustes específicos para las clases que ya usas */
+        #factura-template .text-2xl { font-size: 1.25rem !important; } /* Título principal */
+        #factura-template .text-lg { font-size: 0.95rem !important; }  /* Secciones y tabla */
+        #factura-template .text-md { font-size: 0.85rem !important; }  /* Notas pequeñas */
         .hidden { display: none; }
     </style>
 </head>
@@ -120,7 +125,7 @@
             <div class="mb-4 text-lg">POR CONCEPTO DE:</div>
             
             <table class="w-full border-collapse border border-black mb-12">
-                <tbody id="tabla-body" class="text-lg">
+                <tbody id="tabla-body" class="text-base">
                     </tbody>
             </table>
 
@@ -279,5 +284,6 @@
     </script>
 </body>
 </html>
+
 
 
