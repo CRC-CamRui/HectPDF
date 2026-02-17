@@ -67,32 +67,6 @@
                     + Agregar otro concepto
                 </button>
             </div>
-
-            <div class="mt-6 border-t pt-4">
-                <details class="group">
-                    <summary class="flex justify-between items-center font-medium cursor-pointer list-none text-gray-500 text-sm">
-                        <span>⚙️ Configuración de mis datos</span>
-                        <span class="transition group-open:rotate-180">
-                            <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
-                        </span>
-                    </summary>
-                    <div class="space-y-3 mt-4 text-gray-700">
-                        <div>
-                            <label class="block text-xs font-semibold">Nombre Completo</label>
-                            <input type="text" id="config-nombre" value="HECTOR RUIZ CARDENAS" class="w-full border p-2 rounded text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold">Cédula</label>
-                            <input type="text" id="config-cc" value="79.129.797" class="w-full border p-2 rounded text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold">Datos Bancarios</label>
-                            <textarea id="config-banco" class="w-full border p-2 rounded text-sm" rows="2">Banco Caja Social No. 245 2133 7065</textarea>
-                        </div>
-                        <button onclick="guardarAjustes()" class="text-xs bg-gray-800 text-white px-3 py-1 rounded">Guardar Cambios</button>
-                    </div>
-                </details>
-            </div>
             
             <button onclick="generarPDF()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all transform active:scale-95 mt-6">
                 📄 Generar Cuenta de Cobro
@@ -112,8 +86,8 @@
             </div>
 
             <div class="mb-4 font-bold text-lg italic">DEBE A:</div>
-            <div class="text-lg" id="pdf-nombre-emisor">HECTOR RUIZ CARDENAS</div>
-            <div class="mb-10 text-lg" id="pdf-cc-emisor">CC. 79.129.797</div>
+            <div class="text-lg" id="pdf-nombre-emisor"></div>
+            <div class="mb-10 text-lg" id="pdf-cc-emisor"></div>
 
             <div class="mb-8 text-lg leading-relaxed">
                 LA SUMA DE: <span id="text-total-letras" class="font-bold"></span> 
@@ -128,48 +102,19 @@
             </table>
 
             <div class="text-md mb-20 italic bg-gray-50 p-4 border border-gray-200 rounded" id="pdf-banco-emisor">
-                Favor consignar el valor en la cuenta de ahorros **Banco Caja Social No. 245 2133 7065** a nombre de Héctor Ruiz Cárdenas.
             </div>
 
             <div class="mt-24">
                 <div class="w-64 border-t border-black pt-2">
-                    <div class="font-bold" id="pdf-firma-nombre">Héctor Ruiz Cárdenas</div>
-                    <div id="pdf-firma-cc">C.C. 79.129.797</div>
+                    <div class="font-bold" id="pdf-firma-nombre"></div>
+                    <div id="pdf-firma-cc"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        console.log("Aplicación cargada: Versión sin caché");
-
-        // 1. Cargar datos guardados al inicio con protección de errores
-        window.onload = function() {
-            try {
-                if(localStorage.getItem('datosEmisor')) {
-                    const datos = JSON.parse(localStorage.getItem('datosEmisor'));
-                    if(datos) {
-                        document.getElementById('config-nombre').value = datos.nombre || "HECTOR RUIZ CARDENAS";
-                        document.getElementById('config-cc').value = datos.cc || "79.129.797";
-                        document.getElementById('config-banco').value = datos.banco || "Banco Caja Social No. 245 2133 7065";
-                    }
-                }
-            } catch (error) {
-                console.error("Error leyendo datos guardados:", error);
-            }
-        };
-
-        function guardarAjustes() {
-            const datos = {
-                nombre: document.getElementById('config-nombre').value,
-                cc: document.getElementById('config-cc').value,
-                banco: document.getElementById('config-banco').value
-            };
-            localStorage.setItem('datosEmisor', JSON.stringify(datos));
-            alert("Datos actualizados correctamente.");
-        }
-
-        // 2. Funciones de la tabla dinámica
+        // Funciones de la tabla dinámica
         function agregarFila() {
             const contenedor = document.getElementById('filas-conceptos');
             const nuevaFila = document.createElement('div');
@@ -191,7 +136,7 @@
             }
         }
 
-        // 3. Convertir números a letras
+        // Convertir números a letras
         function numeroALetras(num) {
             const unidades = ['','UN', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
             const decenas = ['DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISEIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE'];
@@ -226,39 +171,47 @@
             return resultado.trim() + ' PESOS M/CTE';
         }
 
-        // 4. Generar el PDF final
+        // Generar el PDF final
         function generarPDF() {
+            // 1. Datos fijos de Héctor
+            const nombreEmisor = "HECTOR RUIZ CARDENAS";
+            const ccEmisor = "79.129.797";
+            const bancoEmisor = "Banco Caja Social No. 245 2133 7065";
+
+            // 2. Capturar datos del formulario
             const empresa = document.getElementById('input-empresa').value || '';
             const nit = document.getElementById('input-nit').value || '';
             const descs = document.querySelectorAll('.desc-concepto');
             const vals = document.querySelectorAll('.val-concepto');
             
-            const nombreEmisor = document.getElementById('config-nombre').value;
-            const ccEmisor = document.getElementById('config-cc').value;
-            const bancoEmisor = document.getElementById('config-banco').value;
-            
-            document.getElementById('pdf-nombre-emisor').innerText = nombreEmisor.toUpperCase();
+            // 3. Inyectar datos fijos en el PDF
+            document.getElementById('pdf-nombre-emisor').innerText = nombreEmisor;
             document.getElementById('pdf-cc-emisor').innerText = "CC. " + ccEmisor;
             document.getElementById('pdf-banco-emisor').innerHTML = `Favor consignar el valor en la cuenta de ahorros **${bancoEmisor}** a nombre de ${nombreEmisor}.`;
             document.getElementById('pdf-firma-nombre').innerText = nombreEmisor;
             document.getElementById('pdf-firma-cc').innerText = "C.C. " + ccEmisor;
             
+            // Fecha Actual
             const hoy = new Date();
             const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('fecha-actual').innerText = "Bogotá, " + hoy.toLocaleDateString('es-ES', opciones);
 
+            // Llenar datos del cliente
             document.getElementById('text-empresa').innerText = empresa.toUpperCase();
             document.getElementById('text-nit').innerText = "NIT. " + nit;
 
+            // Construir la tabla y calcular total
             let total = 0;
             let filas = '';
             descs.forEach((d, i) => {
                 const v = parseFloat(vals[i].value) || 0;
                 total += v;
-                filas += `<tr>
-                    <td class="border border-black p-3">${d.value}</td>
-                    <td class="border border-black p-3 text-right">$${v.toLocaleString('es-CO')}</td>
-                </tr>`;
+                if (d.value.trim() !== "" || v > 0) {
+                    filas += `<tr>
+                        <td class="border border-black p-3">${d.value}</td>
+                        <td class="border border-black p-3 text-right">$${v.toLocaleString('es-CO')}</td>
+                    </tr>`;
+                }
             });
 
             filas += `<tr class="font-bold bg-gray-50">
@@ -270,6 +223,7 @@
             document.getElementById('text-total-numero').innerText = "$" + total.toLocaleString('es-CO');
             document.getElementById('text-total-letras').innerText = numeroALetras(total);
 
+            // Exportar PDF
             const element = document.getElementById('factura-template');
             const opt = {
                 margin: 0,
@@ -279,6 +233,7 @@
                 jsPDF: { unit: 'cm', format: 'letter', orientation: 'portrait' }
             };
 
+            // Renderizar
             document.getElementById('pdf-container').classList.remove('hidden');
             html2pdf().set(opt).from(element).save().then(() => {
                 document.getElementById('pdf-container').classList.add('hidden');
